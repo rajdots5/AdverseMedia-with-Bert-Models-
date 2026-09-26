@@ -45,5 +45,12 @@ __pycache__/
 .env
 .env.local
 .env.*
-
 .streamlit/
+
+# ========================
+# 6. Archives & Backups
+# ========================
+*.zip
+*.tar.gz
+*.tgz
+*.rar
