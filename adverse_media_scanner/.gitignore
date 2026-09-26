@@ -1,0 +1,49 @@
+# ========================
+# 1. Database & Logs (CRITICAL)
+# ========================
+# Ye file git par nahi jani chahiye kyunki isme internal KYC aur audit records hain
+*.db
+*.sqlite
+*.sqlite3
+aml_scanner.db
+aml_scanner.db-journal
+
+# ========================
+# 2. Virtual Environments
+# ========================
+# Heavy libraries (jaise Transformers, Langchain) git par push nahi karni chahiye
+adverseenv/
+venv/
+env/
+.env/
+
+# ========================
+# 3. Python Cache & Compilation
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ========================
+# 4. OS & IDE Specific Files
+# ========================
+# MacOS auto-generated files (Aap Mac use kar rahe hain isliye ye zaroori hai)
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code / PyCharm Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ========================
+# 5. Environment Variables & Secrets
+# ========================
+.env
+.env.local
+.env.*
+
+.streamlit/
