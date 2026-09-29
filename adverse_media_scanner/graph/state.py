@@ -6,6 +6,7 @@ class AgentState(TypedDict):
     target_name: str
     target_context: str
     region: str
+    fetch_limit: int
     
     # Processing state
     search_results: List[Dict[str, str]] # Search se aaye URLs store honge

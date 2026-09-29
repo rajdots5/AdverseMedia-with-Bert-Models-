@@ -4,30 +4,39 @@ from graph.state import AgentState
 from tools.search import get_adverse_news
 from tools.scraper import scrape_article
 from tools.analyzer import resolve_entity_with_weights, classify_risk
-from database import get_customer_kyc, log_graph_audit
+from database import DB_PATH, get_customer_kyc, log_graph_audit
 from config_manager import get_config_int
 
 def search_node(state: AgentState) -> dict:
     target_region = state.get("region", "India")
     
-    conn = sqlite3.connect("aml_scanner.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT allowed_sources FROM region_configs WHERE region_name = ?", (target_region,))
     row = cursor.fetchone()
     conn.close()
     
     allowed_list = [s.strip() for s in row[0].split(',')] if row else []
-    initial_fetch = get_config_int("initial_search_fetch", 12)
+    
+    # 🚀 Interactive terminal ya API payload se aane wala fetch_limit state se uthao
+    user_fetch_limit = state.get("fetch_limit", 5)
 
-    print(f"\n[Node 1: Search] Target: {state['target_name']} | Region: {target_region}")
-    articles = get_adverse_news(state["target_name"], allowed_sources=allowed_list, max_results=initial_fetch)
+    print(f"\n[Node 1: Search] Target: {state['target_name']} | Region: {target_region} | Requested Limit: {user_fetch_limit}")
+    
+    # 🛠️ CRITICAL FIX: max_results me user_fetch_limit pass karna taaki hardcoded 5 override ho jaye
+    articles = get_adverse_news(
+        state["target_name"], 
+        allowed_sources=allowed_list, 
+        max_results=user_fetch_limit,
+        region_name=target_region
+    )
     
     return {"search_results": articles}
 
 
 def process_and_persist_node(state: AgentState) -> dict:
     print(f"\n[Node 2: Processing & Knowledge Graph Audit]")
-    conn = sqlite3.connect("aml_scanner.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     target_name = state["target_name"]
@@ -41,16 +50,11 @@ def process_and_persist_node(state: AgentState) -> dict:
     conn.close()
 
     analyzed_list = []
-    REQUIRED_ARTICLES = get_config_int("required_articles", 5)
     MIN_CONTENT_LENGTH = get_config_int("min_content_length", 150)
     
-    # Internal KYC profile fetch for weighted validation
     kyc_profile = get_customer_kyc(target_name)
 
     for item in state.get("search_results", []):
-        if len(analyzed_list) >= REQUIRED_ARTICLES:
-            break
-
         url = item["url"]
         title = item["title"]
 
@@ -61,7 +65,7 @@ def process_and_persist_node(state: AgentState) -> dict:
             print(f"⏭️ Skipping (Insufficient content): {title[:35]}...")
             continue
 
-        conn = sqlite3.connect("aml_scanner.db")
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
             "INSERT OR IGNORE INTO scraped_news (target_id, url, title, content) VALUES (?, ?, ?, ?)",
@@ -71,13 +75,12 @@ def process_and_persist_node(state: AgentState) -> dict:
         article_id = cursor.lastrowid
         conn.close()
 
-        print(f"\n⚡ Running Weighted Resolution for [{len(analyzed_list) + 1}/{REQUIRED_ARTICLES}]: '{title[:35]}...'")
+        print(f"\n⚡ Running Weighted Resolution for: '{title[:35]}...'")
         
-        # 🆕 Multi-factor dynamic weight resolution
         resolution = resolve_entity_with_weights(target_name, kyc_profile, content)
         
         if not resolution["is_match"]:
-            print("⏭️ False Positive detected! Skipping risk classification.")
+            print("⏭️ Filtered out by Financial/Entity Check.")
             analysis = {
                 "is_match": False,
                 "entity_confidence": resolution["entity_confidence"],
@@ -86,7 +89,7 @@ def process_and_persist_node(state: AgentState) -> dict:
                 "reasoning": resolution["reasoning"]
             }
         else:
-            print("🎯 Match Confirmed! Running Full-Article Risk Classification...")
+            print("🎯 Match Confirmed! Running Risk Classification...")
             risk_data = classify_risk(content)
             analysis = {
                 "is_match": True,
@@ -96,7 +99,6 @@ def process_and_persist_node(state: AgentState) -> dict:
                 "reasoning": resolution["reasoning"]
             }
             
-            # 🆕 Log Knowledge Graph Audit Trail
             log_graph_audit(
                 target_name=target_name,
                 article_url=scraped["url"],
@@ -105,7 +107,7 @@ def process_and_persist_node(state: AgentState) -> dict:
                 risk_category=risk_data["risk_category"]
             )
 
-        conn = sqlite3.connect("aml_scanner.db")
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
             """

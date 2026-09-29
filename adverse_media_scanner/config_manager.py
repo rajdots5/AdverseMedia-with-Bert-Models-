@@ -1,6 +1,5 @@
 import sqlite3
-
-DB_PATH = "aml_scanner.db"
+from database import DB_PATH
 
 def get_config(key: str, default: str = "") -> str:
     """Database se configuration value read karta hai."""

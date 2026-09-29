@@ -1,6 +1,22 @@
-altgraph @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/altgraph-0.17.2-py2.py3-none-any.whl
-confluent-kafka==2.15.0
-future @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/future-0.18.2-py3-none-any.whl
-macholib @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/macholib-1.15.2-py2.py3-none-any.whl
-six @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/six-1.15.0-py2.py3-none-any.whl
-typing_extensions==4.16.0
+# Core Web API & Microservice
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.9.0
+
+# LLM & Agent Graph Framework
+langgraph>=0.2.0
+langchain-core>=0.3.0
+
+# NLP & Machine Learning (BERT / BART Pipelines)
+transformers>=4.40.0
+torch>=2.2.0
+
+# News Scraper & Search Decoders
+googlenewsdecoder>=0.1.7
+trafilatura>=2.0.0
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+
+# Dashboard
+streamlit>=1.38.0
+pandas>=2.2.1

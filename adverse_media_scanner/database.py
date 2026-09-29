@@ -1,6 +1,7 @@
 import sqlite3
+from pathlib import Path
 
-DB_PATH = "aml_scanner.db"
+DB_PATH = Path(__file__).resolve().with_name("aml_scanner.db")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -127,5 +128,8 @@ def log_graph_audit(target_name: str, article_url: str, article_title: str, matc
         VALUES (?, ?, ?, ?)
     """, (article_url, risk_category, 'TRIGGERED_RISK', 1.0))
 
+    cursor.execute("INSERT OR IGNORE INTO region_configs (region_name, allowed_sources) VALUES (?, ?)", 
+               ('India', 'The Hindu (thehindu.com), The Indian Express (indianexpress.com), NDTV (ndtv.com), LiveLaw (livelaw.in), Hindustan Times (hindustantimes.com), Moneycontrol (moneycontrol.com)'))
+    
     conn.commit()
     conn.close()
