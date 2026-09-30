@@ -13,6 +13,7 @@ aml_scanner.db-journal
 # ========================
 # Heavy libraries (jaise Transformers, Langchain) git par push nahi karni chahiye
 adverseenv/
+.venv/
 venv/
 env/
 .env/
